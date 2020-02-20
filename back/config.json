@@ -1,0 +1,10 @@
+{
+  "filepath": "/home/fullacc/go/src/github.com/fullacc/darintern/day7/books.json",
+  "port": "8080",
+  "host": "localhost",
+  "dbport": "5432",
+  "dbhost": "127.0.0.1",
+  "user": "postgres",
+  "password": "postgres",
+  "name": "testdb"
+}
