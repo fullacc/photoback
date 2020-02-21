@@ -36,23 +36,22 @@ func (ef *endpointspersonFactory) GetPerson(idParam string) func(w http.Response
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: Id not found"))
+			renderError(w,"Error: personId not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		person, err := ef.personStore.GetPerson(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(person)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -64,24 +63,23 @@ func (ef *endpointspersonFactory) CreatePerson() func(w http.ResponseWriter, r *
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 
 		person := &Person{}
 		if err := json.Unmarshal(data, person); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: "+err.Error(),http.StatusBadRequest)
 			return
 		}
 		result, err := ef.personStore.CreatePerson(person)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -94,12 +92,12 @@ func (ef *endpointspersonFactory) ListPersons() func(w http.ResponseWriter, r *h
 	return func (w http.ResponseWriter,r *http.Request) {
 		persons, err := ef.personStore.ListPersons()
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(persons)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -112,34 +110,32 @@ func (ef *endpointspersonFactory) UpdatePerson(idParam string) func (w http.Resp
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Book ID not found "))
+			renderError(w,"Error: BookId not found",http.StatusBadRequest)
 			return
 		}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		person := &Person{}
 		if err := json.Unmarshal(data, person); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: "+err.Error(),http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		result, err := ef.personStore.UpdatePerson(intid, person)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -152,23 +148,22 @@ func (ef *endpointspersonFactory) DeletePerson(idParam string) func(w http.Respo
 		vars := mux.Vars(r)
 		id,ok := vars[idParam]
 		if !ok {
-			w.Write([]byte("Error: Not Found"))
-			w.WriteHeader(http.StatusBadRequest)
+			renderError(w,"Error: person not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		err = os.RemoveAll("./photos/"+idParam+"/")
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		err = ef.personStore.DeletePerson(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)

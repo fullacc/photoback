@@ -23,10 +23,8 @@ type Photo struct {
 	Id int
 	Date time.Time
 	OperationId int
-	Operation *Operation
 	Status int
 	PersonId int
-	Person *Person
 	FilePath string
 	Uid string
 }

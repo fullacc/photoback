@@ -39,15 +39,6 @@ type endpointsphotoFactory struct {
 	photoStore PhotoStore
 }
 
-func internal (w http.ResponseWriter,err error){
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("Error: " + err.Error()))
-}
-func renderError(w http.ResponseWriter,msg string,statuscode int) {
-	w.WriteHeader(statuscode)
-	w.Write([]byte(msg))
-}
-
 func (ef *endpointsphotoFactory) GetPhoto(idParam string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request){
 		vars := mux.Vars(r)
@@ -58,17 +49,17 @@ func (ef *endpointsphotoFactory) GetPhoto(idParam string) func(w http.ResponseWr
 		}
 		intid, err := strconv.Atoi(id)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		photo, err := ef.photoStore.GetPhoto(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(photo)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -80,7 +71,7 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 
@@ -88,32 +79,32 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 		if err = r.ParseMultipartForm(maxUploadSize); err != nil {
-			renderError(w,"FILE_TOO_BIG",http.StatusBadRequest)
+			renderError(w,"Error: FILE_TOO_BIG",http.StatusBadRequest)
 			return
 		}
 
 		fileType := r.PostFormValue("type")
 		file, _, err := r.FormFile("uploadFile")
 		if err != nil {
-			renderError(w, "INVALID_FILE", http.StatusBadRequest)
+			renderError(w, "Error: INVALID_FILE", http.StatusBadRequest)
 			return
 		}
 		defer file.Close()
 		fileBytes, err := ioutil.ReadAll(file)
 		if err != nil {
-			renderError(w, "INVALID_FILE", http.StatusBadRequest)
+			renderError(w, "Error: INVALID_FILE", http.StatusBadRequest)
 			return
 		}
 		filetype := http.DetectContentType(fileBytes)
 		if filetype != "image/jpeg" && filetype != "image/jpg" &&
 			filetype != "image/gif" && filetype != "image/png" &&
 			filetype != "application/pdf" {
-			renderError(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
+			renderError(w, "Error: INVALID_FILE_TYPE", http.StatusBadRequest)
 			return
 		}
 		fileEndings, err := mime.ExtensionsByType(fileType)
 		if err != nil {
-			renderError(w, "CANT_READ_FILE_TYPE", http.StatusInternalServerError)
+			renderError(w, "Error: CANT_READ_FILE_TYPE", http.StatusInternalServerError)
 			return
 		}
 
@@ -122,7 +113,7 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 
 		err = os.MkdirAll(uploadPath,0777)
 		if err != nil {
-			renderError(w,"CANT_CREATE_DIRECTORY",http.StatusInternalServerError)
+			renderError(w,"Error: CANT_CREATE_DIRECTORY",http.StatusInternalServerError)
 			return
 		}
 
@@ -131,32 +122,31 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 
 		newFile, err := os.Create(newPath)
 		if err != nil {
-			renderError(w, "CANT_WRITE_FILE", http.StatusInternalServerError)
+			renderError(w, "Error: CANT_WRITE_FILE", http.StatusInternalServerError)
 			return
 		}
 		defer newFile.Close()
 		if _, err := newFile.Write(fileBytes); err != nil {
-			renderError(w, "CANT_WRITE_FILE", http.StatusInternalServerError)
+			renderError(w, "Error: CANT_WRITE_FILE", http.StatusInternalServerError)
 			return
 		}
 
 		photo := &Photo{}
 
 		if err := json.Unmarshal(data, photo); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: " + err.Error(),http.StatusBadRequest)
 			return
 		}
 		photo.Uid = fileName
 		photo.FilePath = newPath
 		result, err := ef.photoStore.CreatePhoto(photo)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -169,12 +159,12 @@ func (ef *endpointsphotoFactory) ListPhotos() func(w http.ResponseWriter, r *htt
 	return func (w http.ResponseWriter,r *http.Request) {
 		photos, err := ef.photoStore.ListPhotos()
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(photos)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -187,19 +177,18 @@ func (ef *endpointsphotoFactory) ListPersonPhotos(idParam string) func(w http.Re
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: Id not found"))
+			renderError(w,"Error: Id not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		photos, err := ef.photoStore.ListPersonPhotos(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(photos)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -212,19 +201,18 @@ func (ef *endpointsphotoFactory) ListOperationPhotos(idParam string) func(w http
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: Id not found"))
+			renderError(w,"Error: Id not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		photos, err := ef.photoStore.ListOperationPhotos(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(photos)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -237,34 +225,32 @@ func (ef *endpointsphotoFactory) UpdatePhoto(idParam string) func (w http.Respon
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Photo ID not found "))
+			renderError(w,"Error: PhotoId not found",http.StatusBadRequest)
 			return
 		}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		photo := &Photo{}
 		if err := json.Unmarshal(data, photo); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: "+err.Error(),http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		result, err := ef.photoStore.UpdatePhoto(intid, photo)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -277,20 +263,19 @@ func (ef *endpointsphotoFactory) DeletePhoto(idParam string) func(w http.Respons
 		vars := mux.Vars(r)
 		id,ok := vars[idParam]
 		if !ok {
-			w.Write([]byte("Error: Not Found"))
-			w.WriteHeader(http.StatusBadRequest)
+			renderError(w,"Error: Photo not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		photo,err := ef.photoStore.GetPhoto(intid)
 		os.Remove(photo.FilePath)
 		err = ef.photoStore.DeletePhoto(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)

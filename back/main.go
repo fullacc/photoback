@@ -17,7 +17,7 @@ import (
 
 var (
 	port=""
-	config="/home/fullacc/go/src/github.com/fullacc/photoback/back/config.json"
+	config="./config.json"
 	flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:        "config",
@@ -69,17 +69,17 @@ func LaunchServer(configpath string) error{
 	}
 	file.Close()
 
-	postgrePersonStore, err := photo_base.NewPostgrePersonStore(configpath)
+	postgrePersonStore, err := photo_base.NewPostgrePersonStore(configfile)
 	if err != nil {
 		panic(err)
 	}
 
-	postgreOperationStore, err := photo_base.NewPostgreOperationStore(configpath)
+	postgreOperationStore, err := photo_base.NewPostgreOperationStore(configfile)
 	if err != nil {
 		panic(err)
 	}
 
-	postgrePhotoStore, err := photo_base.NewPostgrePhotoStore(configpath)
+	postgrePhotoStore, err := photo_base.NewPostgrePhotoStore(configfile)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +110,6 @@ func LaunchServer(configpath string) error{
 	router.Methods("GET").Path("/person/{personid}/operation/{operationid}/photo/").HandlerFunc(postgrephotoendpoints.ListOperationPhotos("operationid"))
 	router.Methods("PUT").Path("/person/{personid}/operation/{operationid}/photo/{id}").HandlerFunc(postgrephotoendpoints.UpdatePhoto("id"))
 	router.Methods("DELETE").Path("/person/{personid}/operation/{operationid}/photo/{id}").HandlerFunc(postgrephotoendpoints.DeletePhoto("id"))
-
 
 
 	fmt.Println("Server started")

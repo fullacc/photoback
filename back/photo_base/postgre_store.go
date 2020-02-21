@@ -3,14 +3,8 @@ package photo_base
 import (
 	"github.com/go-pg/pg"
 	"github.com/go-pg/pg/orm"
+	"net/http"
 )
-
-type PostgreConfig struct {
-	User string
-	Password string
-	Port string
-	Host string
-}
 
 type postgreStore struct {
 	db *pg.DB
@@ -49,3 +43,7 @@ func createSchema(db *pg.DB) error {
 	return nil
 }
 
+func renderError(w http.ResponseWriter,msg string,statuscode int) {
+	w.WriteHeader(statuscode)
+	w.Write([]byte(msg))
+}

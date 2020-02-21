@@ -1,28 +1,10 @@
 package photo_base
 
 import (
-	"bufio"
 	"github.com/go-pg/pg"
-	"github.com/segmentio/encoding/json"
-	"io/ioutil"
-	"os"
 )
 
-func NewPostgrePhotoStore(filename string) (PhotoStore, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	buffer := bufio.NewReader(file)
-	data, err := ioutil.ReadAll(buffer)
-	if err != nil {
-		return nil, err
-	}
-	var configfile ConfigFile
-	if err := json.Unmarshal(data, &configfile); err != nil {
-		return nil, err
-	}
-	file.Close()
+func NewPostgrePhotoStore(configfile *ConfigFile) (PhotoStore, error) {
 
 	db := pg.Connect(&pg.Options{
 		Database: configfile.Name,
@@ -31,7 +13,7 @@ func NewPostgrePhotoStore(filename string) (PhotoStore, error) {
 		Password: configfile.Password,
 	})
 
-	err = createSchema(db)
+	err := createSchema(db)
 	if err != nil {
 		return nil, err
 	}

@@ -23,5 +23,4 @@ type Operation struct{
 	Date time.Time
 	Type string
 	PersonId int
-	Person *Person
 }

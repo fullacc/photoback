@@ -38,23 +38,22 @@ func (ef *endpointsFactory) GetOperation(idParam string) func(w http.ResponseWri
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: Id not found"))
+			renderError(w,"Error: operationd id not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		operation, err := ef.operationStore.GetOperation(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(operation)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -66,24 +65,23 @@ func (ef *endpointsFactory) CreateOperation() func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 
 		operation := &Operation{}
 		if err := json.Unmarshal(data, operation); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: "+err.Error(),http.StatusBadRequest)
 			return
 		}
 		result, err := ef.operationStore.CreateOperation(operation)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -95,12 +93,12 @@ func (ef *endpointsFactory) ListOperations() func(w http.ResponseWriter, r *http
 	return func (w http.ResponseWriter,r *http.Request) {
 		operations, err := ef.operationStore.ListOperations()
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(operations)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -113,23 +111,22 @@ func (ef *endpointsFactory) ListPersonOperations(idParam string) func(w http.Res
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Person ID not found "))
+			renderError(w,"Error: personid not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		operations, err := ef.operationStore.ListPersonOperations(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		data, err := json.Marshal(operations)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(data)
@@ -142,34 +139,32 @@ func (ef *endpointsFactory) UpdateOperation(idParam string) func (w http.Respons
 		vars := mux.Vars(r)
 		id, ok := vars[idParam]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Book ID not found "))
+			renderError(w,"Error: operation id not found",http.StatusBadRequest)
 			return
 		}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		operation := &Operation{}
 		if err := json.Unmarshal(data, operation); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error: " + err.Error()))
+			renderError(w,"Error: "+err.Error(),http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		result, err := ef.operationStore.UpdateOperation(intid, operation)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		response, err := json.Marshal(result)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		w.Write(response)
@@ -182,23 +177,22 @@ func (ef *endpointsFactory) DeleteOperation(personid string, operationid string)
 		vars := mux.Vars(r)
 		id,ok := vars[operationid]
 		if !ok {
-			w.Write([]byte("Error: Not Found"))
-			w.WriteHeader(http.StatusBadRequest)
+			renderError(w,"Error: operation not found",http.StatusBadRequest)
 			return
 		}
 		intid, err := strconv.Atoi(id)
 		if err!=nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		err = ef.operationStore.DeleteOperation(intid)
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 		err = os.RemoveAll("./photos/"+personid+"/"+operationid+"/")
 		if err != nil {
-			internal(w,err)
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
 			return
 		}
 
