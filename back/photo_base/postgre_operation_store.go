@@ -43,7 +43,7 @@ func (ps *postgreStore) ListOperations () ([]*Operation,error) {
 
 func (ps *postgreStore) ListPersonOperations (id int) ([]*Operation,error) {
 	var operations []*Operation
-	err := ps.db.Model(&operations).Where("PersonId = ?", id).Select()
+	err := ps.db.Model(&operations).Where("Person_Id = ?", id).Select()
 	if err != nil {
 		return nil,err
 	}
@@ -66,7 +66,7 @@ func (ps *postgreStore) UpdateOperation(id int, operation *Operation) (*Operatio
 
 func (ps *postgreStore) DeleteOperation(id int) error {
 	var photos []*Photo
-	err := ps.db.Model(&photos).Where("OperationId = ?", id).Select()
+	err := ps.db.Model(&photos).Where("Operation_Id = ?", id).Select()
 	if err != nil {
 		return err
 	}

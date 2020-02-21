@@ -57,11 +57,11 @@ func (ps *postgreStore) UpdatePerson(id int, person *Person) (*Person, error) {
 
 func (ps *postgreStore) DeletePerson(id int) error {
 	var operations []*Operation
-	err := ps.db.Model(&operations).Where("PersonId = ?",id).Select()
+	err := ps.db.Model(&operations).Where("Person_Id = ?",id).Select()
 	var photos []*Photo
 	for _,v := range operations {
 		photos = nil
-		err = ps.db.Model(&photos).Where("OperationId = ?", v.Id).Select()
+		err = ps.db.Model(&photos).Where("Operation_Id = ?", v.Id).Select()
 		if err != nil {
 			return err
 		}

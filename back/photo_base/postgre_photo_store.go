@@ -44,7 +44,7 @@ func (ps *postgreStore) ListPhotos () ([]*Photo,error) {
 
 func (ps *postgreStore) ListPersonPhotos (id int) ([]*Photo,error) {
 	var photos []*Photo
-	err := ps.db.Model(&photos).Where("PersonId = ?", id).Select()
+	err := ps.db.Model(&photos).Where("Person_Id = ?", id).Select()
 	if err != nil {
 		return nil,err
 	}
@@ -53,7 +53,7 @@ func (ps *postgreStore) ListPersonPhotos (id int) ([]*Photo,error) {
 
 func (ps *postgreStore) ListOperationPhotos(id int) ([]*Photo, error){
 	var photos []*Photo
-	err := ps.db.Model(&photos).Where("OperationId = ?", id).Select()
+	err := ps.db.Model(&photos).Where("Operation_Id = ?", id).Select()
 	if err != nil {
 		return nil,err
 	}

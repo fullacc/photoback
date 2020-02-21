@@ -20,11 +20,11 @@ type PhotoStore interface {
 }
 
 type Photo struct {
-	Id int
-	Date time.Time
-	OperationId int
-	Status int
-	PersonId int
+	Id int `json:"id,omitempty"`
+	Date time.Time `json:"date"`
+	OperationId int `json:"operationid"`
+	Status int `json:"status"`
+	PersonId int `json:"personid"`
 	FilePath string
 	Uid string
 }

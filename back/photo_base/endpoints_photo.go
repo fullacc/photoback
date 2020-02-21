@@ -2,7 +2,6 @@ package photo_base
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/xid"
 	"io/ioutil"
@@ -69,21 +68,15 @@ func (ef *endpointsphotoFactory) GetPhoto(idParam string) func(w http.ResponseWr
 
 func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
-			return
-		}
 
-		const maxUploadSize = 10 * 1024
+		const maxUploadSize int64 = 32 << 20
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-		if err = r.ParseMultipartForm(maxUploadSize); err != nil {
-			renderError(w,"Error: FILE_TOO_BIG",http.StatusBadRequest)
+
+		if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+			renderError(w,err.Error(),http.StatusBadRequest)
 			return
 		}
-
-		fileType := r.PostFormValue("type")
 		file, _, err := r.FormFile("uploadFile")
 		if err != nil {
 			renderError(w, "Error: INVALID_FILE", http.StatusBadRequest)
@@ -102,7 +95,7 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 			renderError(w, "Error: INVALID_FILE_TYPE", http.StatusBadRequest)
 			return
 		}
-		fileEndings, err := mime.ExtensionsByType(fileType)
+		fileEndings, err := mime.ExtensionsByType(filetype)
 		if err != nil {
 			renderError(w, "Error: CANT_READ_FILE_TYPE", http.StatusInternalServerError)
 			return
@@ -118,8 +111,6 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 		}
 
 		newPath := filepath.Join(uploadPath, fileName+fileEndings[0])
-		fmt.Printf("FileType: %s, File: %s\n", fileType, newPath)
-
 		newFile, err := os.Create(newPath)
 		if err != nil {
 			renderError(w, "Error: CANT_WRITE_FILE", http.StatusInternalServerError)
@@ -132,8 +123,13 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 		}
 
 		photo := &Photo{}
+		data :=r.FormValue("json")
+		if err != nil {
+			renderError(w,"Error: "+err.Error(),http.StatusInternalServerError)
+			return
+		}
 
-		if err := json.Unmarshal(data, photo); err != nil {
+		if err := json.Unmarshal([]byte(data), photo); err != nil {
 			renderError(w,"Error: " + err.Error(),http.StatusBadRequest)
 			return
 		}

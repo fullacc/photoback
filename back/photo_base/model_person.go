@@ -16,11 +16,11 @@ type PersonStore interface{
 }
 
 type Person struct{
-	Id int
-	Name string
-	Surname string
-	DateOfBirth time.Time
-	Phone string
-	City string
-	Comment string
+	Id int `json:"id,omitempty"`
+	Name string `json:"name"`
+	Surname string `json:"surname"`
+	DateOfBirth time.Time `json:"dateofbirth"`
+	Phone string `json:"phone"`
+	City string `json:"city"`
+	Comment string `json:"comment,omitempty"`
 }

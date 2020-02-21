@@ -19,8 +19,8 @@ type OperationStore interface {
 
 
 type Operation struct{
-	Id int
-	Date time.Time
-	Type string
-	PersonId int
+	Id int `json:"id,omitempty"`
+	Date time.Time `json:"date"`
+	Type string `json:"type"`
+	PersonId int `json:"personid"`
 }
