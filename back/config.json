@@ -1,5 +1,4 @@
 {
-  "filepath": "/home/fullacc/go/src/github.com/fullacc/darintern/day7/books.json",
   "port": "8080",
   "host": "localhost",
   "dbport": "5432",

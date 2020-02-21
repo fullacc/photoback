@@ -4,23 +4,24 @@ import "time"
 
 type OperationStore interface {
 
-	CreateOperation(operation *Operation, person *Person) (*Operation, error)
+	CreateOperation(operation *Operation) (*Operation, error)
 
-	DeleteOperation(id int64) error
+	DeleteOperation(id int) error
 
-	UpdateOperation(id int64, operation *Operation) (*Operation, error)
+	UpdateOperation(id int, operation *Operation) (*Operation, error)
 
 	ListOperations() ([]*Operation, error)
 
-	ListPersonOperations(person *Person) ([]*Operation, error)
+	ListPersonOperations(id int) ([]*Operation, error)
 
-	GetOperation(id int64) (*Operation, error)
+	GetOperation(id int) (*Operation, error)
 }
 
 
 type Operation struct{
-	ID int64
+	Id int
 	Date time.Time
 	Type string
+	PersonId int
 	Person *Person
 }

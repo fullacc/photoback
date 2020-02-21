@@ -4,26 +4,29 @@ import "time"
 
 type PhotoStore interface {
 
-	CreatePhoto(photo *Photo, operationId int64) (*Photo, error)
+	CreatePhoto(photo *Photo) (*Photo, error)
 
-	GetPhoto(id int64) (*Photo, error)
+	GetPhoto(id int) (*Photo, error)
 
 	ListPhotos() ([]*Photo, error)
 
-	ListOperationPhotos(operation *Operation) ([]*Photo, error)
+	ListOperationPhotos(id int) ([]*Photo, error)
 
-	ListPersonPhotos(person *Person) ([]*Photo, error)
+	ListPersonPhotos(id int) ([]*Photo, error)
 
-	UpdatePhoto(id int64, photo *Photo) (*Photo, error)
+	UpdatePhoto(id int, photo *Photo) (*Photo, error)
 
-	DeletePhoto(id int64)  error
+	DeletePhoto(id int)  error
 }
 
 type Photo struct {
-	ID int64
+	Id int
 	Date time.Time
+	OperationId int
 	Operation *Operation
-	Status int64
+	Status int
+	PersonId int
 	Person *Person
 	FilePath string
+	Uid string
 }

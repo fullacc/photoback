@@ -1,26 +1,14 @@
-package book_store
+package photo_base
 
 import (
 	"bufio"
 	"github.com/go-pg/pg"
-	"github.com/go-pg/pg/orm"
 	"github.com/segmentio/encoding/json"
 	"io/ioutil"
 	"os"
 )
 
-type PostgreConfig struct {
-	User string
-	Password string
-	Port string
-	Host string
-}
-
-type postgreStore struct {
-	db *pg.DB
-}
-
-func NewPostgreBookStore(filename string) (BookStore, error) {
+func NewPostgrePhotoStore(filename string) (PhotoStore, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -43,74 +31,76 @@ func NewPostgreBookStore(filename string) (BookStore, error) {
 		Password: configfile.Password,
 	})
 
-	//err = createSchema(db)
+	err = createSchema(db)
 	if err != nil {
 		return nil, err
 	}
 	return &postgreStore{db: db}, nil
 }
 
-func createSchema(db *pg.DB) error {
-	for _, model := range []interface{}{(*Book)(nil)} {
-		err := db.CreateTable(model, &orm.CreateTableOptions{
-			Temp: false,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (ps *postgreStore) CreatePhoto(photo *Photo) (*Photo, error) {
+	return photo, ps.db.Insert(photo)
 }
 
-func (ps *postgreStore) Create(book *Book) (*Book, error) {
-	return book, ps.db.Insert(book)
-}
-
-func (ps *postgreStore) GetBook(id int64)  (*Book,error) {
-	book := &Book{ID:id}
-	err := ps.db.Select(book)
+func (ps *postgreStore) GetPhoto(id int)  (*Photo,error) {
+	photo := &Photo{Id:id}
+	err := ps.db.Select(photo)
 	if err != nil {
 		return nil,err
 	}
-	return book,nil
+	return photo,nil
 }
 
-func (ps *postgreStore) ListBooks () ([]*Book,error) {
-	var books []*Book
-	err := ps.db.Model(&books).Select()
+func (ps *postgreStore) ListPhotos () ([]*Photo,error) {
+	var photos []*Photo
+	err := ps.db.Model(&photos).Select()
 	if err != nil {
 		return nil,err
 	}
-	return books,nil
+	return photos,nil
 }
 
-func (ps *postgreStore) UpdateBook(id int64, book *Book) (*Book, error) {
-	book1 := &Book{ID:id}
-	err := ps.db.Select(book1)
+func (ps *postgreStore) ListPersonPhotos (id int) ([]*Photo,error) {
+	var photos []*Photo
+	err := ps.db.Model(&photos).Where("PersonId = ?", id).Select()
 	if err != nil {
 		return nil,err
 	}
-	book1 = book
-	err = ps.db.Update(book1)
+	return photos,nil
+}
+
+func (ps *postgreStore) ListOperationPhotos(id int) ([]*Photo, error){
+	var photos []*Photo
+	err := ps.db.Model(&photos).Where("OperationId = ?", id).Select()
 	if err != nil {
 		return nil,err
 	}
-	return book1,nil
+	return photos,nil
 }
 
-func (ps *postgreStore) DeleteBook(id int64) error {
-	book := &Book{ID:id}
-	err := ps.db.Select(book)
+func (ps *postgreStore) UpdatePhoto(id int, photo *Photo) (*Photo, error) {
+	photo1 := &Photo{Id:id}
+	err := ps.db.Select(photo1)
+	if err != nil {
+		return nil,err
+	}
+	photo1 = photo
+	err = ps.db.Update(photo1)
+	if err != nil {
+		return nil,err
+	}
+	return photo1, nil
+}
+
+func (ps *postgreStore) DeletePhoto(id int) error {
+	photo := &Photo{Id: id}
+	err := ps.db.Select(photo)
 	if err != nil {
 		return err
 	}
-	err = ps.db.Delete(book)
+	err = ps.db.Delete(photo)
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (ps *postgreStore) SaveBooks(filepath string) error {
 	return nil
 }
