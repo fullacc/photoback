@@ -11,29 +11,9 @@ type postgreStore struct {
 }
 
 func createSchema(db *pg.DB) error {
-	for _, model := range []interface{}{(*Person)(nil)} {
+	for _, model := range []interface{}{(*Person)(nil),(*Operation)(nil),(*Photo)(nil)} {
 		err := db.CreateTable(model, &orm.CreateTableOptions{
 			Temp:        false,
-			IfNotExists: true,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	for _, model := range []interface{}{(*Operation)(nil)} {
-		err := db.CreateTable(model, &orm.CreateTableOptions{
-			Temp: false,
-			FKConstraints: true,
-			IfNotExists: true,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	for _, model := range []interface{}{(*Photo)(nil)} {
-		err := db.CreateTable(model, &orm.CreateTableOptions{
-			Temp: false,
-			FKConstraints: true,
 			IfNotExists: true,
 		})
 		if err != nil {
