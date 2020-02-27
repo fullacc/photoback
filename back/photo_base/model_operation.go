@@ -17,7 +17,6 @@ type OperationStore interface {
 	GetOperation(id int) (*Operation, error)
 }
 
-
 type Operation struct{
 	Id int `json:"id,omitempty"`
 	Date time.Time `json:"date"`

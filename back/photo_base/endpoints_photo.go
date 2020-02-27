@@ -68,7 +68,17 @@ func (ef *endpointsphotoFactory) GetPhoto(idParam string) func(w http.ResponseWr
 
 func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		vars := mux.Vars(r)
+		persid, ok := vars[personid]
+		if !ok {
+			renderError(w,"Error: personId not found",http.StatusBadRequest)
+			return
+		}
+		operid, ok := vars[operationid]
+		if !ok {
+			renderError(w,"Error: operationId not found",http.StatusBadRequest)
+			return
+		}
 		const maxUploadSize int64 = 32 << 20
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
@@ -102,7 +112,7 @@ func (ef *endpointsphotoFactory) CreatePhoto(personid string, operationid string
 		}
 
 		fileName := xid.New().String()
-		uploadPath := "./photos/"+personid+"/"+operationid+"/"
+		uploadPath := "./photos/"+persid+"/"+operid+"/"
 
 		err = os.MkdirAll(uploadPath,0777)
 		if err != nil {
